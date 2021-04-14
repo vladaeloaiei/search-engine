@@ -1,4 +1,4 @@
-package com.aeloaiei.dissertation.subject.partitioner.temp.model;
+package com.aeloaiei.dissertation.subject.partitioner.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

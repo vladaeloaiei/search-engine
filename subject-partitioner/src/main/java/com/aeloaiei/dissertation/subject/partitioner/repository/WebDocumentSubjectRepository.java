@@ -1,6 +1,6 @@
-package com.aeloaiei.dissertation.subject.partitioner.temp.repository;
+package com.aeloaiei.dissertation.subject.partitioner.repository;
 
-import com.aeloaiei.dissertation.subject.partitioner.temp.model.WebDocumentSubject;
+import com.aeloaiei.dissertation.subject.partitioner.model.WebDocumentSubject;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

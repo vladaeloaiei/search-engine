@@ -1,6 +1,6 @@
-package com.aeloaiei.dissertation.subject.partitioner.temp;
+package com.aeloaiei.dissertation.subject.partitioner;
 
-import com.aeloaiei.dissertation.subject.partitioner.temp.service.ClusteringService;
+import com.aeloaiei.dissertation.subject.partitioner.service.ClusteringService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,6 @@ public class SubjectPartitionerApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        clusteringService.ceva();
+        clusteringService.run();
     }
 }

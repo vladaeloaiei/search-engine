@@ -1,5 +1,6 @@
-package com.aeloaiei.dissertation.searchengine.impl.service;
+package com.aeloaiei.dissertation.searchengine.impl.service.score;
 
+import com.aeloaiei.dissertation.searchengine.api.dto.ScoringSearchResultDto;
 import com.aeloaiei.dissertation.searchengine.impl.model.WebWord;
 import com.aeloaiei.dissertation.searchengine.impl.repository.WebWordRepository;
 import com.aeloaiei.dissertation.searchengine.impl.search.tokenizer.Tokenizer;
@@ -16,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.aeloaiei.dissertation.searchengine.impl.search.math.MathHelper.logNormalizedTermFrequency;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 @Service
@@ -29,10 +31,8 @@ public class ScoringWebSearchService {
     @Autowired
     private Tokenizer tokenizer;
 
-    public Map<String, Float> search(String query) {
-        LOGGER.info("Received for searching query: " + query);
-
-        Map<String, Integer> tokens = tokenizer.extract(query).getRight();
+    public ScoringSearchResultDto search(Map<String, Integer> tokens) {
+        LOGGER.info("Received for searching query tokens: " + tokens.toString());
 
         Set<WebWord> webWords = tokens.keySet().stream()
                 .map(token -> webWordRepository.findByWord(token))
@@ -55,7 +55,11 @@ public class ScoringWebSearchService {
         Map<String, Float> searchResult = scoreSearcher.search(queryWordsScores, webWordsScores);
 
         LOGGER.info("Search result: " + searchResult);
-        return searchResult;
+
+        return new ScoringSearchResultDto(searchResult.entrySet()
+                .stream()
+                .map(entry -> new ScoringSearchResultDto.Entry(entry.getKey(), entry.getValue()))
+                .collect(toList()));
     }
 
     private Map.Entry<String, Map<String, Float>> computeScoresForWebWord(WebWord webWord) {

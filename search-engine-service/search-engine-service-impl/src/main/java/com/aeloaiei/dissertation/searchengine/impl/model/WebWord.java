@@ -24,5 +24,6 @@ public class WebWord {
     public static class Appearance {
         private String location;
         private Float logNormalizedTermFrequency;
+        private Set<String> paragraphsIds;
     }
 }
