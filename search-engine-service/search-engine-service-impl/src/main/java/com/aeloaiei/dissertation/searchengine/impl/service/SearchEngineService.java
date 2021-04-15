@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.aeloaiei.dissertation.searchengine.api.dto.ScoringSearchResultDto.Entry.comparingByScore;
-import static com.aeloaiei.dissertation.searchengine.config.Configuration.RANK_WEIGHT;
-import static com.aeloaiei.dissertation.searchengine.config.Configuration.SCORE_WEIGHT;
+import static com.aeloaiei.dissertation.searchengine.impl.config.Configuration.RANK_WEIGHT;
+import static com.aeloaiei.dissertation.searchengine.impl.config.Configuration.SCORE_WEIGHT;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;

@@ -45,7 +45,7 @@
     </dependencies>
 
     <build>
-        <finalName>search-engine-service-impl</finalName>
+        <finalName>search-engine-service</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

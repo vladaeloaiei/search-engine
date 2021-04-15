@@ -1,5 +1,7 @@
 package com.aeloaiei.dissertation.subject.partitioner.service;
 
+import com.aeloaiei.dissertation.categoryhandler.api.client.CategoryHandlerClient;
+import com.aeloaiei.dissertation.categoryhandler.api.dto.WebCategoryDto;
 import com.aeloaiei.dissertation.searchengine.api.clients.SearchEngineClient;
 import com.aeloaiei.dissertation.searchengine.api.dto.ScoringSearchResultDto;
 import com.aeloaiei.dissertation.subject.partitioner.model.WebDocumentSubject;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 @Service
@@ -32,22 +35,25 @@ public class ClusteringService {
     private static final float MAX_ITERATION_DIFF = 0.05F; // 5%
 
     @Autowired
+    private CategoryHandlerClient categoryHandlerClient;
+    @Autowired
     private SearchEngineClient searchEngineClient;
     @Autowired
     private WebDocumentSubjectRepository webDocumentSubjectRepository;
 
     public void run() throws Exception {
-        Map<String, Set<String>> categoriesKeyWords = new HashMap<>();
-
-        categoriesKeyWords.put("SPORT", SPORT_KEYWORDS);
-        categoriesKeyWords.put("SCIENCE", SCIENCE_KEYWORDS);
-        categoriesKeyWords.put("MUSIC", MUSIC_KEYWORDS);
-        categoriesKeyWords.put("WEATHER", WEATHER_KEYWORDS);
+        Map<String, Set<String>> categoriesUrls = new HashMap<>();
+        Map<String, Set<String>> categoriesKeyWords = new HashMap<String, Set<String>>() {{
+            put("SPORT", SPORT_KEYWORDS);
+            put("SCIENCE", SCIENCE_KEYWORDS);
+            put("MUSIC", MUSIC_KEYWORDS);
+            put("WEATHER", WEATHER_KEYWORDS);
+        }};
 
         for (int i = 0; i < MAX_ITERATION_COUNT; ++i) {
-            Map<String, Set<String>> categoriesUrls = anIteration(categoriesKeyWords);
             Map<String, Set<String>> newCategoriesKeyWords = new HashMap<>();
 
+            categoriesUrls = anIteration(categoriesKeyWords);
             LOGGER.info("Iteration " + i + " categories: " + new ObjectMapper().writeValueAsString(categoriesUrls));
 
             for (String category : categoriesUrls.keySet()) {
@@ -72,6 +78,11 @@ public class ClusteringService {
 
             categoriesKeyWords = newCategoriesKeyWords;
         }
+
+        categoryHandlerClient.putAll(categoriesUrls.entrySet()
+                .stream()
+                .map(entry -> new WebCategoryDto(entry.getKey(), entry.getValue()))
+                .collect(toList()));
     }
 
     private Map<String, Set<String>> anIteration(Map<String, Set<String>> keyWords) {

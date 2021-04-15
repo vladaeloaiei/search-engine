@@ -10,7 +10,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients(basePackages = {
-        "com.aeloaiei.dissertation.searchengine.api"
+        "com.aeloaiei.dissertation.searchengine.api",
+        "com.aeloaiei.dissertation.categoryhandler.api"
 })
 @SpringBootApplication
 public class SubjectPartitionerApplication implements CommandLineRunner {
