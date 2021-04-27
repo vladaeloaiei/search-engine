@@ -3,20 +3,16 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <artifactId>search-engine-service</artifactId>
+        <artifactId>web-details-provider-service</artifactId>
         <groupId>com.aeloaiei.dissertation</groupId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>search-engine-service-impl</artifactId>
+    <artifactId>web-details-provider-service-impl</artifactId>
 
     <dependencies>
-        <dependency>
-            <groupId>com.aeloaiei.dissertation</groupId>
-            <artifactId>search-engine-service-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.aeloaiei.dissertation</groupId>
             <artifactId>web-details-provider-service-api</artifactId>
@@ -27,6 +23,10 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
@@ -34,19 +34,10 @@
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
         </dependency>
-        <dependency>
-            <groupId>edu.stanford.nlp</groupId>
-            <artifactId>stanford-corenlp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>edu.stanford.nlp</groupId>
-            <artifactId>stanford-corenlp</artifactId>
-            <classifier>models</classifier>
-        </dependency>
     </dependencies>
 
     <build>
-        <finalName>search-engine-service</finalName>
+        <finalName>web-details-provider-service</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

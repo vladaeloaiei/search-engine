@@ -1,11 +1,12 @@
 package com.aeloaiei.dissertation.subject.partitioner.service;
 
-import com.aeloaiei.dissertation.categoryhandler.api.client.CategoryHandlerClient;
-import com.aeloaiei.dissertation.categoryhandler.api.dto.WebCategoryDto;
-import com.aeloaiei.dissertation.searchengine.api.clients.SearchEngineClient;
-import com.aeloaiei.dissertation.searchengine.api.dto.ScoringSearchResultDto;
-import com.aeloaiei.dissertation.subject.partitioner.model.WebDocumentSubject;
-import com.aeloaiei.dissertation.subject.partitioner.repository.WebDocumentSubjectRepository;
+import com.aeloaiei.dissertation.search.engine.api.clients.SearchEngineClient;
+import com.aeloaiei.dissertation.search.engine.api.dto.ScoringSearchResultDto;
+import com.aeloaiei.dissertation.subject.partitioner.config.Configuration;
+import com.aeloaiei.dissertation.web.details.provider.api.client.WebCategoryClient;
+import com.aeloaiei.dissertation.web.details.provider.api.client.WebDocumentSubjectClient;
+import com.aeloaiei.dissertation.web.details.provider.api.dto.WebCategoryDto;
+import com.aeloaiei.dissertation.web.details.provider.api.dto.WebDocumentSubjectDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,12 +14,17 @@ import org.modelmapper.internal.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -26,48 +32,36 @@ import static java.util.stream.Collectors.toMap;
 public class ClusteringService {
     private static final Logger LOGGER = LogManager.getLogger(ClusteringService.class);
 
-    private static final Set<String> SPORT_KEYWORDS = new HashSet<>(asList("sport", "football", "cricket", "tennis", "cycling", "game", "league"));
-    private static final Set<String> SCIENCE_KEYWORDS = new HashSet<>(asList("science", "study", "sea", "electric", "documentary", "space", "nasa"));
-    private static final Set<String> MUSIC_KEYWORDS = new HashSet<>(asList("music", "theme", "mix", "song", "sound", "rapper", "voice"));
-    private static final Set<String> WEATHER_KEYWORDS = new HashSet<>(asList("weather", "word", "location", "city", "climate", "wind", "air"));
-
-    private static final int MAX_ITERATION_COUNT = 1000;
-    private static final float MAX_ITERATION_DIFF = 0.05F; // 5%
-
     @Autowired
-    private CategoryHandlerClient categoryHandlerClient;
+    private Configuration config;
     @Autowired
     private SearchEngineClient searchEngineClient;
     @Autowired
-    private WebDocumentSubjectRepository webDocumentSubjectRepository;
+    private WebCategoryClient webCategoryClient;
+    @Autowired
+    private WebDocumentSubjectClient webDocumentSubjectClient;
 
     public void run() throws Exception {
         Map<String, Set<String>> categoriesUrls = new HashMap<>();
-        Map<String, Set<String>> categoriesKeyWords = new HashMap<String, Set<String>>() {{
-            put("SPORT", SPORT_KEYWORDS);
-            put("SCIENCE", SCIENCE_KEYWORDS);
-            put("MUSIC", MUSIC_KEYWORDS);
-            put("WEATHER", WEATHER_KEYWORDS);
-        }};
+        Map<String, Set<String>> categoriesKeyWords = loadCategoryKeyWords();
 
-        for (int i = 0; i < MAX_ITERATION_COUNT; ++i) {
+        for (int i = 0; i < config.maxIterationsCount; ++i) {
             Map<String, Set<String>> newCategoriesKeyWords = new HashMap<>();
 
             categoriesUrls = anIteration(categoriesKeyWords);
             LOGGER.info("Iteration " + i + " categories: " + new ObjectMapper().writeValueAsString(categoriesUrls));
 
             for (String category : categoriesUrls.keySet()) {
-                Set<String> newSubjects = new HashSet<>();
-
-                for (String url : categoriesUrls.get(category)) {
-                    if (!newCategoriesKeyWords.containsKey(category)) {
-                        newCategoriesKeyWords.put(category, new HashSet<>());
-                    }
-
-                    webDocumentSubjectRepository.findByLocation(url)
-                            .map(WebDocumentSubject::getSubjects)
-                            .ifPresent(subjects -> subjects.forEach(subject -> newSubjects.add(subject.getSubject())));
+                if (!newCategoriesKeyWords.containsKey(category)) {
+                    newCategoriesKeyWords.put(category, new HashSet<>());
                 }
+
+                List<String> newSubjects = webDocumentSubjectClient.getByLocations(categoriesUrls.get(category))
+                        .stream()
+                        .map(WebDocumentSubjectDto::getSubjects)
+                        .flatMap(Set::stream)
+                        .map(WebDocumentSubjectDto.Subject::getSubject)
+                        .collect(toList());
 
                 newCategoriesKeyWords.get(category).addAll(newSubjects);
             }
@@ -79,10 +73,24 @@ public class ClusteringService {
             categoriesKeyWords = newCategoriesKeyWords;
         }
 
-        categoryHandlerClient.putAll(categoriesUrls.entrySet()
+        webCategoryClient.putAll(categoriesUrls.entrySet()
                 .stream()
                 .map(entry -> new WebCategoryDto(entry.getKey(), entry.getValue()))
                 .collect(toList()));
+    }
+
+    private Map<String, Set<String>> loadCategoryKeyWords() {
+        try {
+            return Files.readAllLines(Paths.get(config.categoryKeywordsPath))
+                    .stream()
+                    .map(keywords -> Arrays.asList(keywords.split(" ")))
+                    .filter(keywords -> !keywords.isEmpty())
+                    .map(keywords -> new AbstractMap.SimpleEntry<String, Set<String>>(keywords.get(0), new HashSet<>(keywords)))
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        } catch (IOException e) {
+            LOGGER.error("Failed to load " + config.categoryKeywordsPath + " config file", e);
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, Set<String>> anIteration(Map<String, Set<String>> keyWords) {
@@ -138,15 +146,15 @@ public class ClusteringService {
                 diff = (float) (initialWords.size() + newWords.size()) /
                         (keyWords.get(category).size() + newKeyWords.get(category).size());
 
-                if (diff > MAX_ITERATION_DIFF) {
-                    LOGGER.info("Difference is bigger than max iteration diff (" + MAX_ITERATION_DIFF * 100 + "%)");
+                if (diff > config.maxIterationsDiff) {
+                    LOGGER.info("Difference is bigger than max iteration diff (" + config.maxIterationsDiff * 100 + "%)");
                     LOGGER.info("Difference = " + diff * 100 + "%");
                     return true;
                 }
             }
         }
 
-        LOGGER.info("Difference is lower than max iteration diff (" + MAX_ITERATION_DIFF * 100 + "%)");
+        LOGGER.info("Difference is lower than max iteration diff (" + config.maxIterationsDiff * 100 + "%)");
         return false;
     }
 }

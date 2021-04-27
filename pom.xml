@@ -14,7 +14,7 @@
     <modules>
         <module>search-engine-service</module>
         <module>subject-partitioner</module>
-        <module>category-handler</module>
+        <module>web-details-provider-service</module>
     </modules>
 
     <groupId>com.aeloaiei.dissertation</groupId>
@@ -28,6 +28,7 @@
         <spring-cloud.version>2.1.0.RELEASE</spring-cloud.version>
         <modelmapper.version>2.3.9</modelmapper.version>
         <stanford.corenlp.version>4.2.0</stanford.corenlp.version>
+        <maven.exec.plugin.version>3.0.0</maven.exec.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -55,5 +56,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>
