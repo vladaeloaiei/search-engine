@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.aeloaiei.dissertation.search.engine.impl.config.Configuration.MAX_CONTENT_SIZE;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -64,6 +65,7 @@ public class SearchResultWrapper {
         Set<String> paragraphs = webParagraphClient.getByIds(appearance.getParagraphsIds())
                 .stream()
                 .map(WebParagraphDto::getContent)
+                .map(this::limitParagraphContent)
                 .collect(toSet());
 
         return new SearchResultDto.Entry(appearance.getLocation(), title, paragraphs);
@@ -87,5 +89,10 @@ public class SearchResultWrapper {
         return urls.stream()
                 .map(url -> paragraphs.getOrDefault(url, new SearchResultDto.Entry(url)))
                 .collect(toList());
+    }
+
+    private String limitParagraphContent(String intro) {
+        int endIndex = Math.min(MAX_CONTENT_SIZE, intro.length());
+        return intro.substring(0, endIndex) + " ...";
     }
 }

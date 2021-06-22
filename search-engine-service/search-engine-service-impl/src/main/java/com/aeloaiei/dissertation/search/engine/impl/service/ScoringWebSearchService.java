@@ -30,6 +30,8 @@ public class ScoringWebSearchService {
     public ScoringSearchResultDto search(Map<String, Integer> tokens) {
         LOGGER.info("Received for searching query tokens: " + tokens.toString());
 
+        int totalTokensCount = computeTotalTokensCount(tokens);
+
         List<WebWordDto> webWords = webWordClient.getByWords(tokens.keySet());
 
         Map<String, Float> webWordsIdf = webWords.stream()
@@ -41,7 +43,7 @@ public class ScoringWebSearchService {
 
         Map<String, Float> queryWordsScores = tokens.entrySet()
                 .stream()
-                .map(word -> mapWordCountToScore(word, webWordsIdf))
+                .map(word -> mapWordCountToScore(word, totalTokensCount, webWordsIdf))
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         Map<String, Float> searchResult = scoreSearcher.search(queryWordsScores, webWordsScores);
@@ -52,6 +54,10 @@ public class ScoringWebSearchService {
                 .stream()
                 .map(entry -> new ScoringSearchResultDto.Entry(entry.getKey(), entry.getValue()))
                 .collect(toList()));
+    }
+
+    private int computeTotalTokensCount(Map<String, Integer> tokens) {
+        return tokens.values().stream().reduce(Integer::sum).orElse(0);
     }
 
     private Map.Entry<String, Map<String, Float>> computeScoresForWebWord(WebWordDto webWord) {
@@ -66,7 +72,7 @@ public class ScoringWebSearchService {
         return new AbstractMap.SimpleEntry<>(appearance.getLocation(), appearance.getLogNormalizedTermFrequency() * webWordIdf);
     }
 
-    private Map.Entry<String, Float> mapWordCountToScore(Map.Entry<String, Integer> word, Map<String, Float> webWordsIdf) {
+    private Map.Entry<String, Float> mapWordCountToScore(Map.Entry<String, Integer> word, int totalTokensCount, Map<String, Float> webWordsIdf) {
         float webWordIdf = 0;
 
         if (webWordsIdf.containsKey(word.getKey())) {
@@ -74,6 +80,6 @@ public class ScoringWebSearchService {
         }
 
         return new AbstractMap.SimpleEntry<>(word.getKey(),
-                MathHelper.logNormalizedTermFrequency(word.getValue(), webWordsIdf.size()) * webWordIdf);
+                MathHelper.logNormalizedTermFrequency(word.getValue(), totalTokensCount) * webWordIdf);
     }
 }

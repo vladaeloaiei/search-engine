@@ -1,6 +1,7 @@
 package com.aeloaiei.dissertation.search.engine.impl.service;
 
 import com.aeloaiei.dissertation.search.engine.api.dto.DetailedCategoryDto;
+import com.aeloaiei.dissertation.search.engine.impl.config.Configuration;
 import com.aeloaiei.dissertation.web.details.provider.api.client.WebCategoryClient;
 import com.aeloaiei.dissertation.web.details.provider.api.client.WebIntroClient;
 import com.aeloaiei.dissertation.web.details.provider.api.client.WebTitleClient;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.aeloaiei.dissertation.search.engine.impl.config.Configuration.MAX_CONTENT_SIZE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -52,7 +54,12 @@ public class DetailedCategoryService {
                 .map(url -> new DetailedCategoryDto.Page(
                         url,
                         titles.getOrDefault(url, ""),
-                        intros.getOrDefault(url, "")))
+                        limitIntroContent(intros.getOrDefault(url, ""))))
                 .collect(toSet());
+    }
+
+    private String limitIntroContent(String intro) {
+        int endIndex = Math.min(MAX_CONTENT_SIZE, intro.length());
+        return intro.substring(0, endIndex) + " ...";
     }
 }

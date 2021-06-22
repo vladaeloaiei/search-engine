@@ -26,7 +26,7 @@ public class WebCategoryController {
     private ModelMapper modelMapper;
 
     @PutMapping
-    public ResponseEntity<?> putAll(@RequestBody List<WebCategoryDto> webCategoryDtos) {
+    public ResponseEntity<WebCategory> putAll(@RequestBody List<WebCategoryDto> webCategoryDtos) {
         List<WebCategory> webCategories = webCategoryDtos.stream()
                 .map(c -> modelMapper.map(c, WebCategory.class))
                 .collect(toList());

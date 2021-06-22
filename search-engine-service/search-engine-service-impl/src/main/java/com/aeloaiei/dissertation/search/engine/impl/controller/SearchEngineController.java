@@ -1,8 +1,9 @@
 package com.aeloaiei.dissertation.search.engine.impl.controller;
 
-import com.aeloaiei.dissertation.search.engine.impl.service.SearchEngineService;
 import com.aeloaiei.dissertation.search.engine.api.dto.ScoringSearchResultDto;
 import com.aeloaiei.dissertation.search.engine.api.dto.SearchResultDto;
+import com.aeloaiei.dissertation.search.engine.api.dto.SliceSearchResultDto;
+import com.aeloaiei.dissertation.search.engine.impl.service.SearchEngineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,6 +20,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class SearchEngineController {
     @Autowired
     private SearchEngineService searchEngineService;
+
+    @GetMapping("/slice")
+    public ResponseEntity<SliceSearchResultDto> sliceSearch(@RequestParam String query, @RequestParam int slice) {
+        return ResponseEntity.ok(searchEngineService.sliceSearch(query, slice));
+    }
 
     @GetMapping
     public ResponseEntity<SearchResultDto> search(@RequestParam String query) {

@@ -86,6 +86,7 @@ public class ClusteringService {
                     .map(keywords -> Arrays.asList(keywords.split(" ")))
                     .filter(keywords -> !keywords.isEmpty())
                     .map(keywords -> new AbstractMap.SimpleEntry<String, Set<String>>(keywords.get(0), new HashSet<>(keywords)))
+                    .peek(keywords -> keywords.getValue().remove(keywords.getKey()))
                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
         } catch (IOException e) {
             LOGGER.error("Failed to load " + config.categoryKeywordsPath + " config file", e);
